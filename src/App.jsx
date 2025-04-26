@@ -8,6 +8,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("");
   const [userInput, setUserInput] = useState("");
+  const [currentUsers, setCurrentUsers] = useState([]);
 
   const chatEndRef = useRef(null);
 
@@ -16,7 +17,6 @@ function App() {
   }, [messages]);
 
   function connectToChatServer() {
-    console.log("connectToChatServer");
     const _socket = io("https://react-node-socketio-chat.onrender.com", {
       autoConnect: false,
       query: { username: username },
@@ -26,60 +26,47 @@ function App() {
   }
 
   function disconnectToChatServer() {
-    console.log("disconnectToChatServer");
     socket?.disconnect();
   }
 
   function onConnected() {
-    console.log("front onConnected");
     setIsConnected(true);
   }
 
   function onDisConnected() {
-    console.log("front onDisConnected");
     setIsConnected(false);
+    setCurrentUsers([]); // ✅ 접속 종료 시 목록 초기화
   }
 
   function onMessageReceived(msg) {
-    console.log("front onMessageReceived");
-    console.log(msg);
-
     setMessages((previous) => [...previous, msg]);
   }
 
+  function onUpdateUsers(users) {
+    console.log("접속자 목록 업데이트:", users);
+    setCurrentUsers(users);
+  }
+
   function sendMessageToChatServer() {
-    console.log(`front sendMessageToChatServer input: ${userInput}`);
-    socket?.emit(
-      "new message",
-      { username: username, message: userInput },
-      (response) => {
-        console.log(response);
-      }
-    );
+    if (userInput.trim() === "") return;
+    socket?.emit("new message", { username: username, message: userInput });
   }
 
   useEffect(() => {
-    console.log("useEffect called");
-    socket?.on("connect", onConnected);
-    socket?.on("disconnect", onDisConnected);
+    if (!socket) return;
 
-    socket?.on("new message", onMessageReceived);
+    socket.on("connect", onConnected);
+    socket.on("disconnect", onDisConnected);
+    socket.on("new message", onMessageReceived);
+    socket.on("update users", onUpdateUsers);
+
     return () => {
-      console.log("useEffect clean up function called");
-      socket?.off("connect", onConnected);
-      socket?.off("disconnect", onDisConnected);
-      socket?.off("new message", onMessageReceived);
+      socket.off("connect", onConnected);
+      socket.off("disconnect", onDisConnected);
+      socket.off("new message", onMessageReceived);
+      socket.off("update users", onUpdateUsers);
     };
   }, [socket]);
-
-  const messageList = messages.map((a, i) => {
-    const isMyMessage = a.username === username; // 내가 보낸 메시지 체크
-    return (
-      <li key={i} style={{ backgroundColor: isMyMessage ? "gray" : "" }}>
-        {a.username} : {a.message}
-      </li>
-    );
-  });
 
   return (
     <>
@@ -87,23 +74,15 @@ function App() {
         <h2>React + Nodejs + SocketIO 기반 채팅 프로그램</h2>
         <h3>
           <div> 닉네임: {username}</div>
-          <div> 현재 접속 상태: {isConnected ? "접속중" : "미접속"}</div>
+          <div> 상태: {isConnected ? "접속중" : "미접속"}</div>
         </h3>
         <div className="username-input">
           <input
             value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-            }}
-            placeholder="닉네임을 입력하고 접속 버튼을 눌러 채팅에 참여하세요"
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="닉네임 입력"
           />
-          <button
-            onClick={() => {
-              connectToChatServer();
-            }}
-          >
-            접속
-          </button>
+          <button onClick={connectToChatServer}>접속</button>
           <button
             onClick={() => {
               disconnectToChatServer();
@@ -116,21 +95,41 @@ function App() {
       </div>
 
       <ul className="chat-list">
-        {messageList}
+        {messages.map((msg, i) => (
+          <li
+            key={i}
+            style={{ fontWeight: msg.username === username ? "bold" : "" }}
+          >
+            {msg.username} : {msg.message}
+          </li>
+        ))}
         <div ref={chatEndRef}></div>
       </ul>
+
+      <div className="current-user">
+        <h4 className="current-user-title">현재 접속자 목록</h4>
+        <ul className="current-user-list">
+          {currentUsers.map((user, i) => (
+            <li key={i}>{user}</li>
+          ))}
+        </ul>
+      </div>
 
       <div className="message-input">
         <input
           value={userInput}
-          onChange={(e) => {
-            setUserInput(e.target.value);
-          }}
+          onChange={(e) => setUserInput(e.target.value)}
           placeholder="메세지를 입력하세요"
+          onKeyUp={(e) => {
+            if (e.key === "Enter") {
+              sendMessageToChatServer();
+              setUserInput("");
+            }
+          }}
         />
         <button
-          onClick={(e) => {
-            sendMessageToChatServer(e);
+          onClick={() => {
+            sendMessageToChatServer();
             setUserInput("");
           }}
         >

@@ -4,41 +4,55 @@ import * as http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// __dirname 대체
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Express 앱 설정
 const app = express();
 const server = http.createServer(app);
 
-// Socket.IO 설정
 const io = new Server(server, {
   cors: {
-    origin: "*", // 배포할 도메인으로 설정해도 됨
+    origin: "*",
   },
 });
 
-// 소켓 연결
+let connectedUsers = [];
+
 io.on("connection", (client) => {
   const connectedClientUsername = client.handshake.query.username;
   console.log(`사용자 들어옴 ${connectedClientUsername}`);
 
+  // ✅ 사용자 목록에 추가
+  connectedUsers.push(connectedClientUsername);
+  console.log("현재 접속자:", connectedUsers);
+
+  // ✅ 사용자 목록 전송
+  io.emit("update users", connectedUsers);
+
+  // 접속 알림
   client.broadcast.emit("new message", {
     username: "관리자",
     message: `${connectedClientUsername}님이 방에 들어왔습니다`,
   });
 
+  // 메세지 수신 처리
   client.on("new message", (msg) => {
-    console.log(`보낸 사용자 ${connectedClientUsername}`);
     io.emit("new message", {
       username: msg.username,
       message: msg.message,
     });
   });
 
+  // 접속 해제 처리
   client.on("disconnect", () => {
     console.log(`사용자 나감 ${connectedClientUsername}`);
+
+    connectedUsers = connectedUsers.filter(
+      (user) => user !== connectedClientUsername
+    );
+    console.log("남은 접속자 목록:", connectedUsers);
+
+    io.emit("update users", connectedUsers);
+
     io.emit("new message", {
       username: "관리자",
       message: `${connectedClientUsername}님이 방에 나갔습니다`,
@@ -46,14 +60,13 @@ io.on("connection", (client) => {
   });
 });
 
-// 정적 파일 서빙 (Vite 빌드 결과)
+// 정적 파일 서빙
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get("*", (_, res) => {
-  res.sendFile(path.resolve(__dirname, "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-// Render 환경에서는 이 포트 필수!
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`서버에서 듣고 있습니다 ${PORT}`);

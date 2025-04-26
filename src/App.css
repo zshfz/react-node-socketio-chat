@@ -23,6 +23,8 @@
   padding: 10px;
   box-sizing: border-box;
   list-style: none;
+  word-break: break-all; /* 글자 단위 줄바꿈 */
+  max-width: 70%;
 }
 
 .message-input {
@@ -34,4 +36,34 @@
 
 .message-input input {
   flex: 1;
+}
+
+.current-user {
+  position: fixed; /* 고정 위치 */
+  top: 200px; /* navbar height */
+  right: 0; /* 화면 오른쪽 */
+  width: 200px; /* 고정 너비 */
+  height: calc(100vh - 250px); /* 상단 navbar + 하단 input 제외한 높이 */
+  border-left: 1px solid gray;
+  overflow-y: auto; /* 스크롤 가능 */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.current-user-title {
+  padding: 10px;
+  margin: 0;
+  border-bottom: 1px solid gray;
+  font-weight: bold;
+  text-align: center;
+}
+
+.current-user-list {
+  flex: 1; /* 나머지 공간 차지 */
+  overflow-y: auto; /* 스크롤 */
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
