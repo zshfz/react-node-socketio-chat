@@ -1,7 +1,10 @@
 import { Server } from "socket.io";
 import express from "express";
 import * as http from "http";
-import ViteExpress from "vite-express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const server = http.createServer(app);
@@ -41,16 +44,13 @@ io.on("connection", (client) => {
   });
 });
 
+// 정적 파일 서빙
+app.use(express.static(path.join(__dirname, "dist")));
+
+app.get("*", (_, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
 server.listen(3000, () => {
   console.log("서버에서 듣고 있습니다 3000");
 });
-
-app.get("/message", (_, res) => {
-  res.send("Hello from express");
-});
-
-app.get("/api", (_, res) => {
-  res.send("Hello from api");
-});
-
-ViteExpress.bind(app, server);
