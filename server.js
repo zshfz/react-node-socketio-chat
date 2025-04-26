@@ -3,6 +3,7 @@ import express from "express";
 import * as http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import process from "process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -50,7 +51,8 @@ app.use(express.static(path.join(__dirname, "dist")));
 app.get("/*", (_, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
-
-server.listen(3000, () => {
-  console.log("서버에서 듣고 있습니다 3000");
+// 🔥 포트 수정
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`서버에서 듣고 있습니다 ${PORT}`);
 });
