@@ -1,0 +1,37 @@
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  position: fixed; /* Set the navbar to fixed position */
+  top: 0; /* Position the navbar at the top of the page */
+  width: 100%; /* Full width */
+}
+
+.username-input {
+  display: flex;
+}
+
+.username-input input {
+  flex: 1;
+}
+
+.chat-list {
+  position: fixed;
+  top: 190px; /* navbar height */
+  bottom: 30px; /* message input height */
+  width: 100%;
+  overflow-y: auto;
+  padding: 10px;
+  box-sizing: border-box;
+  list-style: none;
+}
+
+.message-input {
+  position: fixed; /* Set the navbar to fixed position */
+  bottom: 0; /* Position the navbar at the bottom of the page */
+  width: 100%; /* Full width */
+  display: flex;
+}
+
+.message-input input {
+  flex: 1;
+}
