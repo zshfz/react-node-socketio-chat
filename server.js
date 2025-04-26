@@ -50,7 +50,7 @@ io.on("connection", (client) => {
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get("*", (_, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.sendFile(path.resolve(__dirname, "dist", "index.html"));
 });
 
 // Render 환경에서는 이 포트 필수!
